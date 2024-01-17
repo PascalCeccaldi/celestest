@@ -7,11 +7,29 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils"></script>
 </head>
 
-<body style="background-color: black">
-    <video id="input_video" width="640" height="480" style="display: none"></video>
+<style>
+    body {
+        background-color: black;
+    }
+
+    video {
+        display: none;
+    }
+
+    img {
+        width: 100%;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+</style>
+
+<body>
+    <video id="input_video" width="640" playsinline height="480"></video>
     <audio id="audio" src="celestest.m4a" playsinline preload="none"></audio>
-    <img id="background_image" src="closed.png" height=100% style="position: fixed; display: block; left: 50%; transform: translate(-50%, 0);"></img>
-    
+    <img id="background_image" src="closed.png"></img>
+
     <!-- If you read this, you may pass the test while not taking it. -->
     <!-- Go back to where you came from or you may be doomed. -->
 
@@ -40,7 +58,6 @@
                 videoElement.play();
             });
 
-
         function calculateEyeOpenness(landmarks, eyeUpperIdx, eyeLowerIdx, eyeCenterIdx) {
             let sumLowerY = 0;
             let sumUpperY = 0;
@@ -60,7 +77,7 @@
 
         function onResults(results) {
             if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-                
+                //let lightIndex = computeLightIndex();
                 const backgroundImage = document.getElementById('background_image');        
     
                 const RightEyeUpperIdx = [246, 161, 160, 159, 158, 157, 173];
