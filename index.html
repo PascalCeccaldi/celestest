@@ -2,6 +2,8 @@
 <html>
 <head>
     <title>celestest</title>
+    <!-- If you read this, you may pass the test while not taking it. -->
+    <!-- Go back to where you came from or you may be doomed. -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils"></script>
@@ -17,21 +19,32 @@
     }
 
     img {
+        display: none;
         width: 100%;
         position: fixed;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
     }
+
+    h1, h2 {
+        color: white;
+        text-align: center;
+    }
+    
+    h1 {
+        margin-top: 25%;
+    }
 </style>
 
 <body>
     <video id="input_video" width="640" playsinline height="480"></video>
     <audio id="audio" src="celestest.m4a" playsinline preload="none"></audio>
-    <img id="background_image" src="closed.png"></img>
 
-    <!-- If you read this, you may pass the test while not taking it. -->
-    <!-- Go back to where you came from or you may be doomed. -->
+    <h1>celestest</h1>
+    <h2>start</h2>
+
+    <img id="background_image" src="closed.png"></img>
 
     <script type="text/javascript">
         const videoElement = document.getElementById('input_video');
@@ -58,6 +71,18 @@
                 videoElement.play();
             });
 
+        function start() {
+            const title1 = document.getElementsByTagName('h1')[0];
+            const title2 = document.getElementsByTagName('h2')[0];
+            title1.style.display = 'none';
+            title2.style.display = 'none';
+
+            const backgroundImage = document.getElementById('background_image');
+            backgroundImage.style.display = 'block';
+        }
+
+        document.addEventListener('click', start);
+
         function calculateEyeOpenness(landmarks, eyeUpperIdx, eyeLowerIdx, eyeCenterIdx) {
             let sumLowerY = 0;
             let sumUpperY = 0;
@@ -77,7 +102,6 @@
 
         function onResults(results) {
             if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-                //let lightIndex = computeLightIndex();
                 const backgroundImage = document.getElementById('background_image');        
     
                 const RightEyeUpperIdx = [246, 161, 160, 159, 158, 157, 173];
