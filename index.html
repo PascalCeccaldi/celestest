@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>celestest</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils"></script>
+</head>
+
+<body style="background-color: black">
+    <video id="input_video" width="640" height="480" style="display: none"></video>
+    <audio id="audio" src="celestest.m4a" playsinline preload="none"></audio>
+    <img id="background_image" src="closed.png" height=100% style="position: fixed; display: block; left: 50%; transform: translate(-50%, 0);"></img>
+    
+    <!-- If you read this, you may pass the test while not taking it. -->
+    <!-- Go back to where you came from or you may be doomed. -->
+
+    <script type="text/javascript">
+        const videoElement = document.getElementById('input_video');
+    
+        const faceMesh = new FaceMesh({
+            locateFile: (file) => {
+                return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+            }
+        });
+
+        faceMesh.setOptions({
+            maxNumFaces: 1,
+            refineLandmarks: true,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        faceMesh.onResults(onResults);
+
+        navigator.mediaDevices.getUserMedia({video: {
+            facingMode: 'user',}})
+            .then((stream) => {
+                videoElement.srcObject = stream;
+                videoElement.play();
+            });
+
+
+        function calculateEyeOpenness(landmarks, eyeUpperIdx, eyeLowerIdx, eyeCenterIdx) {
+            let sumLowerY = 0;
+            let sumUpperY = 0;
+    
+            for (let idx of eyeLowerIdx) {
+                sumLowerY += landmarks[idx].y;
+            }
+    
+            for (let idx of eyeUpperIdx) {
+                sumUpperY += landmarks[idx].y;
+            }
+
+            const distanceX = Math.abs(landmarks[eyeCenterIdx[0]].x - landmarks[eyeCenterIdx[1]].x);
+            const eyeOpenness = (sumLowerY - sumUpperY) / distanceX;
+            return eyeOpenness;
+        }
+
+        function onResults(results) {
+            if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                
+                const backgroundImage = document.getElementById('background_image');        
+    
+                const RightEyeUpperIdx = [246, 161, 160, 159, 158, 157, 173];
+                const RightEyeLowerIdx = [7, 163, 144, 145, 153, 154, 155];
+                const RightEyeCenterIdx = [33, 133];
+
+                const LeftEyeUpperIdx = [466, 388, 387, 386, 385, 384, 398];
+                const LeftEyeLowerIdx = [249, 390, 373, 374, 380, 381, 382];
+                const LeftEyeCenterIdx = [263, 362];
+
+                const allIndices = RightEyeUpperIdx.concat(LeftEyeUpperIdx, RightEyeLowerIdx, LeftEyeLowerIdx, RightEyeCenterIdx, LeftEyeCenterIdx);
+                
+                const landmarks = results.multiFaceLandmarks[0];
+
+                const leftEyeOpenness = calculateEyeOpenness(landmarks, LeftEyeUpperIdx, LeftEyeLowerIdx, LeftEyeCenterIdx);
+                const rightEyeOpenness = calculateEyeOpenness(landmarks, RightEyeUpperIdx, RightEyeLowerIdx, RightEyeCenterIdx);
+
+                const eyeOpenThreshold = 0.3;
+
+                const bothEyesOpen = leftEyeOpenness > eyeOpenThreshold && rightEyeOpenness > eyeOpenThreshold;
+                const bothEyesClosed = leftEyeOpenness < eyeOpenThreshold && rightEyeOpenness < eyeOpenThreshold;
+            
+                const audio = document.getElementById('audio');
+                if (bothEyesClosed) {
+                    backgroundImage.src = 'opened.png';
+                    if(audio.paused) {
+                        audio.play();
+                    }
+                } else if (bothEyesOpen) {
+                    backgroundImage.src = 'closed.png';
+                    if (!audio.paused) {
+                        audio.currentTime = 0;
+                        audio.pause();
+                    }
+                }
+            }
+        }
+        
+        const camera = new Camera(videoElement, {
+            onFrame: async () => {
+                await faceMesh.send({image: videoElement});
+            },
+            width: 640,
+            height: 480
+        });
+        camera.start();
+    </script>
+
+</body>
+</html>
+
